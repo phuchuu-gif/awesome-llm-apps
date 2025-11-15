@@ -17,8 +17,8 @@ tavily_api_key = st.sidebar.text_input("Tavily API Key", type="password")
 # Check if all API keys are set
 if openrouter_api_key and tavily_api_key:
     # Set API keys as environment variables
-    os.environ[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] = openrouter_api_key
-    os.environ[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] = tavily_api_key
+    os.environsk-or-v1-78dded94b73d0842fd575ee03b48e689cee6f25ed89238b178ecb9496b52d49d = openrouter_api_key
+    os.environtvly-dev-5cXYLWje887YLKlei8GFZq3gXhMGdiby = tavily_api_key
 
     llm = ChatOpenAI(
         model="deepseek/deepseek-chat-v3-0324",
