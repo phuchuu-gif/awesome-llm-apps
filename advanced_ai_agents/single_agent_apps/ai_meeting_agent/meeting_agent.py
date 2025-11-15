@@ -1,7 +1,8 @@
 import streamlit as st
-from crewai import Agent, Task, Crew, LLM
+from crewai import Agent, Task, Crew
 from crewai.process import Process
-from crewai_tools import SerperDevTool
+from crewai_tools import TavilySearchTool
+from langchain_openai import ChatOpenAI
 import os
 
 # Streamlit app setup
@@ -10,17 +11,22 @@ st.title("AI Meeting Preparation Agent 📝")
 
 # Sidebar for API keys
 st.sidebar.header("API Keys")
-anthropic_api_key = st.sidebar.text_input("Anthropic API Key", type="password")
-serper_api_key = st.sidebar.text_input("Serper API Key", type="password")
+openrouter_api_key = st.sidebar.text_input("OpenRouter API Key", type="password")
+tavily_api_key = st.sidebar.text_input("Tavily API Key", type="password")
 
 # Check if all API keys are set
-if anthropic_api_key and serper_api_key:
-    # # Set API keys as environment variables
-    os.environ["ANTHROPIC_API_KEY"] = anthropic_api_key
-    os.environ["SERPER_API_KEY"] = serper_api_key
+if openrouter_api_key and tavily_api_key:
+    # Set API keys as environment variables
+    os.environ["OPENROUTER_API_KEY"] = openrouter_api_key
+    os.environ["TAVILY_API_KEY"] = tavily_api_key
 
-    claude = LLM(model="claude-3-5-sonnet-20240620", temperature= 0.7, api_key=anthropic_api_key)
-    search_tool = SerperDevTool()
+    llm = ChatOpenAI(
+        model="deepseek/deepseek-chat-v3-0324",
+        openai_api_key=openrouter_api_key,
+        openai_api_base="https://openrouter.ai/api/v1",
+        temperature=0.7
+    )
+    search_tool = TavilySearchTool(api_key=tavily_api_key)
 
     # Input fields
     company_name = st.text_input("Enter the company name:")
@@ -36,7 +42,7 @@ if anthropic_api_key and serper_api_key:
         backstory='You are an expert at quickly understanding complex business contexts and identifying critical information.',
         verbose=True,
         allow_delegation=False,
-        llm=claude,
+        llm=llm,
         tools=[search_tool]
     )
 
@@ -46,7 +52,7 @@ if anthropic_api_key and serper_api_key:
         backstory='You are a seasoned industry analyst with a knack for spotting emerging trends and opportunities.',
         verbose=True,
         allow_delegation=False,
-        llm=claude,
+        llm=llm,
         tools=[search_tool]
     )
 
@@ -56,7 +62,7 @@ if anthropic_api_key and serper_api_key:
         backstory='You are a master meeting planner, known for creating highly effective strategies and agendas.',
         verbose=True,
         allow_delegation=False,
-        llm=claude,
+        llm=llm,
     )
 
     executive_briefing_creator = Agent(
@@ -65,7 +71,7 @@ if anthropic_api_key and serper_api_key:
         backstory='You are an expert communicator, skilled at distilling complex information into clear, actionable insights.',
         verbose=True,
         allow_delegation=False,
-        llm=claude,
+        llm=llm,
     )
 
     # Define the tasks
@@ -165,7 +171,7 @@ if anthropic_api_key and serper_api_key:
     # Run the crew when the user clicks the button
     if st.button("Prepare Meeting"):
         with st.spinner("AI agents are preparing your meeting..."):
-            result = meeting_prep_crew.kickoff()        
+            result = meeting_prep_crew.kickoff()
         st.markdown(result)
 
     st.sidebar.markdown("""
@@ -181,6 +187,7 @@ if anthropic_api_key and serper_api_key:
     - Create an executive brief with key talking points
 
     This process may take a few minutes. Please be patient!
-    """)
+    ""
+    )
 else:
     st.warning("Please enter all API keys in the sidebar before proceeding.")
